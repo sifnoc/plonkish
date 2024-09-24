@@ -19,6 +19,7 @@ use crate::{
     },
     Error,
 };
+use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
 use std::marker::PhantomData;
 
@@ -27,8 +28,8 @@ pub struct Zeromorph<Pcs>(PhantomData<Pcs>);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound(
-    serialize = "M::G1Affine: Serialize",
-    deserialize = "M::G1Affine: DeserializeOwned",
+    serialize = "M::G1Affine: Serialize + SerdeObject",
+    deserialize = "M::G1Affine: DeserializeOwned + SerdeObject",
 ))]
 pub struct ZeromorphKzgProverParam<M: MultiMillerLoop> {
     commit_pp: UnivariateKzgProverParam<M>,
@@ -43,8 +44,8 @@ impl<M: MultiMillerLoop> ZeromorphKzgProverParam<M> {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound(
-    serialize = "M::G1Affine: Serialize, M::G2Affine: Serialize",
-    deserialize = "M::G1Affine: DeserializeOwned, M::G2Affine: DeserializeOwned",
+    serialize = "M::G1Affine: Serialize + SerdeObject, M::G2Affine: Serialize + SerdeObject",
+    deserialize = "M::G1Affine: DeserializeOwned + SerdeObject, M::G2Affine: DeserializeOwned + SerdeObject",
 ))]
 pub struct ZeromorphKzgVerifierParam<M: MultiMillerLoop> {
     vp: UnivariateKzgVerifierParam<M>,
@@ -69,8 +70,8 @@ impl<M> PolynomialCommitmentScheme<M::Scalar> for Zeromorph<UnivariateKzg<M>>
 where
     M: MultiMillerLoop,
     M::Scalar: Serialize + DeserializeOwned,
-    M::G1Affine: Serialize + DeserializeOwned,
-    M::G2Affine: Serialize + DeserializeOwned,
+    M::G1Affine: Serialize + DeserializeOwned + SerdeObject,
+    M::G2Affine: Serialize + DeserializeOwned + SerdeObject,
 {
     type Param = <UnivariateKzg<M> as PolynomialCommitmentScheme<M::Scalar>>::Param;
     type ProverParam = ZeromorphKzgProverParam<M>;
@@ -84,6 +85,10 @@ where
         assert!(poly_size.is_power_of_two());
 
         UnivariateKzg::<M>::setup(poly_size, batch_size, rng)
+    }
+
+    fn setup_custom(_filename: &str) -> Result<Self::Param, Error> {
+        unimplemented!("Zeromorph does not support custom setup")
     }
 
     fn trim(

@@ -44,7 +44,7 @@ where
     F: PrimeField,
     Pcs: PolynomialCommitmentScheme<F>,
 {
-    pub(crate) pcs: Pcs::ProverParam,
+    pub pcs: Pcs::ProverParam,
     pub(crate) num_instances: Vec<usize>,
     pub(crate) num_witness_polys: Vec<usize>,
     pub(crate) num_challenges: Vec<usize>,
@@ -64,7 +64,7 @@ where
     F: PrimeField,
     Pcs: PolynomialCommitmentScheme<F>,
 {
-    pub(crate) pcs: Pcs::VerifierParam,
+    pub pcs: Pcs::VerifierParam,
     pub(crate) num_instances: Vec<usize>,
     pub(crate) num_witness_polys: Vec<usize>,
     pub(crate) num_challenges: Vec<usize>,
@@ -97,6 +97,10 @@ where
         Pcs::setup(poly_size, batch_size, rng)
     }
 
+    fn setup_custom(filename: &str) -> Result<Pcs::Param, Error> {
+        Pcs::setup_custom(filename)
+    }
+
     fn preprocess(
         param: &Pcs::Param,
         circuit_info: &PlonkishCircuitInfo<F>,
@@ -112,7 +116,7 @@ where
         circuit: &impl PlonkishCircuit<F>,
         transcript: &mut impl TranscriptWrite<Pcs::CommitmentChunk, F>,
         _: impl RngCore,
-    ) -> Result<(), Error> {
+    ) -> Result<Vec<MultilinearPolynomial<F>>, Error> {
         let instance_polys = {
             let instances = circuit.instances();
             for (num_instances, instances) in pp.num_instances.iter().zip_eq(instances) {
@@ -229,7 +233,7 @@ where
         Pcs::batch_open(&pp.pcs, polys, comms, &points, &evals, transcript)?;
         end_timer(timer);
 
-        Ok(())
+        Ok(witness_polys)
     }
 
     fn verify(

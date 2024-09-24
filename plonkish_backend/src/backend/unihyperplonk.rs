@@ -101,6 +101,10 @@ where
         Pcs::setup(poly_size, batch_size, rng)
     }
 
+    fn setup_custom(filename: &str) -> Result<Pcs::Param, Error> {
+        Pcs::setup_custom(filename)
+    }
+
     fn preprocess(
         param: &Pcs::Param,
         circuit_info: &PlonkishCircuitInfo<F>,
@@ -120,7 +124,7 @@ where
         circuit: &impl PlonkishCircuit<F>,
         transcript: &mut impl TranscriptWrite<Pcs::CommitmentChunk, F>,
         _: impl RngCore,
-    ) -> Result<(), Error> {
+    ) -> Result<Vec<UnivariatePolynomial<F>>, Error> {
         let instance_polys = {
             let instances = circuit.instances();
             for (num_instances, instances) in pp.num_instances.iter().zip_eq(instances) {
@@ -157,7 +161,15 @@ where
             witness_polys.extend(polys);
             challenges.extend(transcript.squeeze_challenges(*num_challenges));
         }
-        let polys = chain![
+
+        let witness_polys_return = witness_polys
+            .clone()
+            .into_iter()
+            .map(|poly| poly.into_evals())
+            .map(UnivariatePolynomial::lagrange)
+            .collect_vec();
+
+        let polys: Vec<Cow<'_, MultilinearPolynomial<F>>> = chain![
             instance_polys.into_iter().map(Cow::Owned),
             pp.preprocess_polys.iter().map(Cow::Borrowed),
             witness_polys.into_iter().map(Cow::Owned)
@@ -258,7 +270,7 @@ where
         )?;
         end_timer(timer);
 
-        Ok(())
+        Ok(witness_polys_return)
     }
 
     fn verify(

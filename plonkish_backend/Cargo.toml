@@ -50,3 +50,11 @@ required-features = ["benchmark"]
 name = "pcs"
 harness = false
 required-features = ["benchmark"]
+
+[[bin]]
+name = "generate_hyperplonk_srs"
+path = "bin/hyperplonk_srs_generator.rs"
+
+[[bin]]
+name = "generate_unihyperplonk_srs"
+path = "bin/unihyperplonk_srs_generator.rs"

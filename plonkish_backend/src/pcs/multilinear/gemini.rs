@@ -19,6 +19,7 @@ use crate::{
     },
     Error,
 };
+use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
 use std::{marker::PhantomData, ops::Neg};
 
@@ -29,8 +30,8 @@ impl<M> PolynomialCommitmentScheme<M::Scalar> for Gemini<UnivariateKzg<M>>
 where
     M: MultiMillerLoop,
     M::Scalar: Serialize + DeserializeOwned,
-    M::G1Affine: Serialize + DeserializeOwned,
-    M::G2Affine: Serialize + DeserializeOwned,
+    M::G1Affine: Serialize + DeserializeOwned + SerdeObject,
+    M::G2Affine: Serialize + DeserializeOwned + SerdeObject,
 {
     type Param = <UnivariateKzg<M> as PolynomialCommitmentScheme<M::Scalar>>::Param;
     type ProverParam = <UnivariateKzg<M> as PolynomialCommitmentScheme<M::Scalar>>::ProverParam;
@@ -42,6 +43,10 @@ where
 
     fn setup(poly_size: usize, batch_size: usize, rng: impl RngCore) -> Result<Self::Param, Error> {
         UnivariateKzg::<M>::setup(poly_size, batch_size, rng)
+    }
+
+    fn setup_custom(filename: &str) -> Result<Self::Param, Error> {
+        UnivariateKzg::<M>::setup_custom(filename)
     }
 
     fn trim(

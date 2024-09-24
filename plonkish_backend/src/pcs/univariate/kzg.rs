@@ -15,8 +15,9 @@ use crate::{
     },
     Error,
 };
+use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{marker::PhantomData, ops::Neg, slice};
+use std::{io::Read, marker::PhantomData, ops::Neg, slice};
 
 #[derive(Clone, Debug)]
 pub struct UnivariateKzg<M: MultiMillerLoop>(PhantomData<M>);
@@ -41,8 +42,8 @@ impl<M: MultiMillerLoop> UnivariateKzg<M> {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound(
-    serialize = "M::G1Affine: Serialize, M::G2Affine: Serialize",
-    deserialize = "M::G1Affine: DeserializeOwned, M::G2Affine: DeserializeOwned",
+    serialize = "M::G1Affine: Serialize + SerdeObject, M::G2Affine: Serialize + SerdeObject",
+    deserialize = "M::G1Affine: DeserializeOwned + SerdeObject, M::G2Affine: DeserializeOwned + SerdeObject",
 ))]
 pub struct UnivariateKzgParam<M: MultiMillerLoop> {
     k: usize,
@@ -79,8 +80,8 @@ impl<M: MultiMillerLoop> UnivariateKzgParam<M> {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(bound(
-    serialize = "M::G1Affine: Serialize",
-    deserialize = "M::G1Affine: DeserializeOwned",
+    serialize = "M::G1Affine: Serialize + SerdeObject",
+    deserialize = "M::G1Affine: DeserializeOwned + SerdeObject",
 ))]
 pub struct UnivariateKzgProverParam<M: MultiMillerLoop> {
     k: usize,
@@ -193,8 +194,8 @@ impl<M> PolynomialCommitmentScheme<M::Scalar> for UnivariateKzg<M>
 where
     M: MultiMillerLoop,
     M::Scalar: Serialize + DeserializeOwned,
-    M::G1Affine: Serialize + DeserializeOwned,
-    M::G2Affine: Serialize + DeserializeOwned,
+    M::G1Affine: Serialize + DeserializeOwned + SerdeObject,
+    M::G2Affine: Serialize + DeserializeOwned + SerdeObject,
 {
     type Param = UnivariateKzgParam<M>;
     type ProverParam = UnivariateKzgProverParam<M>;
@@ -238,6 +239,41 @@ where
 
         Ok(Self::Param {
             k: poly_size.ilog2() as usize,
+            monomial_g1,
+            lagrange_g1,
+            powers_of_s_g2,
+        })
+    }
+
+    fn setup_custom(filename: &str) -> Result<Self::Param, Error>
+    where
+        M::G1Affine: SerdeObject,
+        M::G2Affine: SerdeObject,
+    {
+        let reader = &mut std::fs::File::open(filename).unwrap();
+
+        let mut k = [0u8; 4];
+        let _ = reader.read_exact(&mut k[..]);
+
+        let k = u32::from_le_bytes(k) as usize;
+
+        let monomial_g1 = (0..(1 << k))
+            .map(|_| M::G1Affine::read_raw(reader))
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        let lagrange_g1 = (0..(1 << k))
+            .map(|_| M::G1Affine::read_raw(reader))
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        let powers_of_s_g2 = (0..(1 << k))
+            .map(|_| M::G2Affine::read_raw(reader))
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        Ok(Self::Param {
+            k,
             monomial_g1,
             lagrange_g1,
             powers_of_s_g2,
@@ -376,14 +412,35 @@ where
 mod test {
     use crate::{
         pcs::{
-            test::{run_batch_commit_open_verify, run_commit_open_verify},
+            test::{gen_param, run_batch_commit_open_verify, run_commit_open_verify},
             univariate::kzg::UnivariateKzg,
+            PolynomialCommitmentScheme,
         },
         util::transcript::Keccak256Transcript,
     };
     use halo2_curves::bn256::Bn256;
 
     type Pcs = UnivariateKzg<Bn256>;
+
+    #[test]
+    fn setup_custom() {
+        let params_from_file = UnivariateKzg::<Bn256>::setup_custom("unihyperplonk-srs-4").unwrap();
+        let params_from_rng = gen_param::<_, Pcs, Keccak256Transcript<_>>(4, 1);
+
+        assert_eq!(params_from_file.g1(), params_from_rng.g1());
+        assert_eq!(
+            params_from_file.monomial_g1().len(),
+            params_from_rng.monomial_g1().len()
+        );
+        assert_eq!(
+            params_from_file.lagrange_g1.len(),
+            params_from_rng.lagrange_g1.len()
+        );
+        assert_eq!(
+            params_from_file.powers_of_s_g2().len(),
+            params_from_rng.powers_of_s_g2().len()
+        );
+    }
 
     #[test]
     fn commit_open_verify() {

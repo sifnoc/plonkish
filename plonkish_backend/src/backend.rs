@@ -25,6 +25,10 @@ pub trait PlonkishBackend<F: Field>: Clone + Debug {
         rng: impl RngCore,
     ) -> Result<<Self::Pcs as PolynomialCommitmentScheme<F>>::Param, Error>;
 
+    fn setup_custom(
+        filename: &str,
+    ) -> Result<<Self::Pcs as PolynomialCommitmentScheme<F>>::Param, Error>;
+
     fn preprocess(
         param: &<Self::Pcs as PolynomialCommitmentScheme<F>>::Param,
         circuit_info: &PlonkishCircuitInfo<F>,
@@ -35,7 +39,7 @@ pub trait PlonkishBackend<F: Field>: Clone + Debug {
         circuit: &impl PlonkishCircuit<F>,
         transcript: &mut impl TranscriptWrite<CommitmentChunk<F, Self::Pcs>, F>,
         rng: impl RngCore,
-    ) -> Result<(), Error>;
+    ) -> Result<Vec<<Self::Pcs as PolynomialCommitmentScheme<F>>::Polynomial>, Error>;
 
     fn verify(
         vp: &Self::VerifierParam,
