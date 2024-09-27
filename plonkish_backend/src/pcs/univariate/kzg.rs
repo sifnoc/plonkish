@@ -412,9 +412,8 @@ where
 mod test {
     use crate::{
         pcs::{
-            test::{gen_param, run_batch_commit_open_verify, run_commit_open_verify},
-            univariate::kzg::UnivariateKzg,
-            PolynomialCommitmentScheme,
+            test::{compare_param, run_batch_commit_open_verify, run_commit_open_verify},
+            univariate::{kzg::UnivariateKzg, UnivariateKzgParam},
         },
         util::transcript::Keccak256Transcript,
     };
@@ -424,22 +423,25 @@ mod test {
 
     #[test]
     fn setup_custom() {
-        let params_from_file = UnivariateKzg::<Bn256>::setup_custom("unihyperplonk-srs-4").unwrap();
-        let params_from_rng = gen_param::<_, Pcs, Keccak256Transcript<_>>(4, 1);
+        type Param = UnivariateKzgParam<Bn256>;
 
-        assert_eq!(params_from_file.g1(), params_from_rng.g1());
-        assert_eq!(
-            params_from_file.monomial_g1().len(),
-            params_from_rng.monomial_g1().len()
-        );
-        assert_eq!(
-            params_from_file.lagrange_g1.len(),
-            params_from_rng.lagrange_g1.len()
-        );
-        assert_eq!(
-            params_from_file.powers_of_s_g2().len(),
-            params_from_rng.powers_of_s_g2().len()
-        );
+        fn compare_param_fields(params_from_file: &Param, params_from_rng: &Param) {
+            assert_eq!(params_from_file.g1(), params_from_rng.g1());
+            assert_eq!(
+                params_from_file.monomial_g1().len(),
+                params_from_rng.monomial_g1().len()
+            );
+            assert_eq!(
+                params_from_file.lagrange_g1.len(),
+                params_from_rng.lagrange_g1.len()
+            );
+            assert_eq!(
+                params_from_file.powers_of_s_g2().len(),
+                params_from_rng.powers_of_s_g2().len()
+            );
+        }
+
+        compare_param::<_, Pcs, Keccak256Transcript<_>>("unihyperplonk", 4, compare_param_fields);
     }
 
     #[test]

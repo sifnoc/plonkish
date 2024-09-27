@@ -178,9 +178,9 @@ mod test {
         },
     };
     use rand::{rngs::OsRng, Rng};
-    use std::iter;
+    use std::{fs::remove_file, iter, panic, process::Command, sync::Once};
 
-    pub(super) fn gen_param<F, Pcs, T>(k: usize, batch_size: usize) -> Pcs::Param
+    fn gen_param<F, Pcs, T>(k: usize, batch_size: usize) -> Pcs::Param
     where
         F: PrimeField,
         Pcs: PolynomialCommitmentScheme<F>,
@@ -191,6 +191,62 @@ mod test {
         let mut rng = OsRng;
         let poly_size = 1 << k;
         Pcs::setup(poly_size, batch_size, &mut rng).unwrap()
+    }
+
+    pub(super) fn compare_param<F, Pcs, T>(
+        name: &str,
+        degree: usize,
+        compare_fn: impl Fn(&Pcs::Param, &Pcs::Param),
+    ) where
+        F: PrimeField,
+        Pcs: PolynomialCommitmentScheme<F>,
+        T: TranscriptRead<Pcs::CommitmentChunk, F>
+            + TranscriptWrite<Pcs::CommitmentChunk, F>
+            + InMemoryTranscript<Param = ()>,
+    {
+        const INIT: Once = Once::new();
+
+        INIT.call_once(|| {
+            let mut gen_keys_command = Command::new("cargo");
+            gen_keys_command
+                .arg("run")
+                .arg("--bin")
+                .arg(format!("generate_{}_srs", name))
+                .arg(format!("{}", name))
+                .arg(format!("{}", degree));
+
+            gen_keys_command
+                .spawn()
+                .expect("Failed to spawn cargo build")
+                .wait()
+                .expect("cargo build errored");
+        });
+
+        let filename = format!("{}{}", name, degree);
+
+        let result = panic::catch_unwind(|| {
+            let params_from_file = Pcs::setup_custom(&filename).unwrap();
+            let params_from_rng = gen_param::<_, Pcs, T>(degree, 1);
+            (params_from_file, params_from_rng)
+        });
+
+        let (params_from_file, params_from_rng) = match result {
+            Ok(values) => values,
+            Err(err) => {
+                // Clean up even got panic
+                if let Err(e) = remove_file(&filename) {
+                    eprintln!("Failed to delete file {}: {}", &filename, e);
+                }
+                panic::resume_unwind(err)
+            }
+        };
+
+        compare_fn(&params_from_file, &params_from_rng);
+
+        // Clean up
+        if let Err(e) = remove_file(&filename) {
+            eprintln!("Failed to delete file {}: {}", &filename, e);
+        }
     }
 
     pub(super) fn run_commit_open_verify<F, Pcs, T>()

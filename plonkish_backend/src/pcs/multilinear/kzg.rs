@@ -413,9 +413,8 @@ where
 mod test {
     use crate::{
         pcs::{
-            multilinear::kzg::MultilinearKzg,
-            test::{gen_param, run_batch_commit_open_verify, run_commit_open_verify},
-            PolynomialCommitmentScheme,
+            multilinear::{kzg::MultilinearKzg, MultilinearKzgParam},
+            test::{compare_param, run_batch_commit_open_verify, run_commit_open_verify},
         },
         util::transcript::Keccak256Transcript,
     };
@@ -425,13 +424,16 @@ mod test {
 
     #[test]
     fn setup_custom() {
-        let params_from_file = MultilinearKzg::<Bn256>::setup_custom("hyperplonk-srs-4").unwrap();
-        let params_from_setup = gen_param::<_, Pcs, Keccak256Transcript<_>>(4, 1);
+        type Param = MultilinearKzgParam<Bn256>;
 
-        assert_eq!(params_from_file.g1(), params_from_setup.g1());
-        assert_eq!(params_from_file.eqs().len(), params_from_setup.eqs().len());
-        assert_eq!(params_from_file.g2(), params_from_setup.g2());
-        assert_eq!(params_from_file.ss().len(), params_from_setup.ss().len());
+        fn compare_param_fields(params_from_file: &Param, params_from_rng: &Param) {
+            assert_eq!(params_from_file.g1(), params_from_rng.g1());
+            assert_eq!(params_from_file.eqs().len(), params_from_rng.eqs().len());
+            assert_eq!(params_from_file.g2(), params_from_rng.g2());
+            assert_eq!(params_from_file.ss().len(), params_from_rng.ss().len());
+        }
+
+        compare_param::<_, Pcs, Keccak256Transcript<_>>("hyperplonk", 4, compare_param_fields);
     }
 
     #[test]
