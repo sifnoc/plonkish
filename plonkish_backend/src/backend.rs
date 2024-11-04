@@ -10,7 +10,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{collections::BTreeSet, fmt::Debug};
+use std::{collections::BTreeSet, io::Read, fmt::Debug};
 
 pub mod hyperplonk;
 pub mod unihyperplonk;
@@ -25,8 +25,8 @@ pub trait PlonkishBackend<F: Field>: Clone + Debug {
         rng: impl RngCore,
     ) -> Result<<Self::Pcs as PolynomialCommitmentScheme<F>>::Param, Error>;
 
-    fn setup_custom(
-        filename: &str,
+    fn setup_custom<R: Read>(
+        reader: &mut R,
     ) -> Result<<Self::Pcs as PolynomialCommitmentScheme<F>>::Param, Error>;
 
     fn preprocess(

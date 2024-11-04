@@ -21,7 +21,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{marker::PhantomData, ops::Neg};
+use std::{marker::PhantomData, io::Read, ops::Neg};
 
 #[derive(Clone, Debug)]
 pub struct Gemini<Pcs>(PhantomData<Pcs>);
@@ -45,8 +45,8 @@ where
         UnivariateKzg::<M>::setup(poly_size, batch_size, rng)
     }
 
-    fn setup_custom(filename: &str) -> Result<Self::Param, Error> {
-        UnivariateKzg::<M>::setup_custom(filename)
+    fn setup_custom<R: Read>(reader: &mut R) -> Result<Self::Param, Error> {
+        UnivariateKzg::<M>::setup_custom(reader)
     }
 
     fn trim(

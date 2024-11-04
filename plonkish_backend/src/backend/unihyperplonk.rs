@@ -25,7 +25,9 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{borrow::Cow, fmt::Debug, hash::Hash, iter, marker::PhantomData, ops::Deref};
+use std::{
+    borrow::Cow, fmt::Debug, hash::Hash, io::Read, iter, marker::PhantomData, ops::Deref,
+};
 
 pub(crate) mod preprocessor;
 pub(crate) mod prover;
@@ -101,8 +103,8 @@ where
         Pcs::setup(poly_size, batch_size, rng)
     }
 
-    fn setup_custom(filename: &str) -> Result<Pcs::Param, Error> {
-        Pcs::setup_custom(filename)
+    fn setup_custom<R: Read>(reader: &mut R) -> Result<Pcs::Param, Error> {
+        Pcs::setup_custom(reader)
     }
 
     fn preprocess(

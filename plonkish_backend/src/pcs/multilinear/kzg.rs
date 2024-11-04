@@ -18,7 +18,13 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{io::Read, iter, marker::PhantomData, ops::Neg, slice};
+use std::{
+    io::Read,
+    iter,
+    marker::PhantomData,
+    ops::Neg,
+    slice,
+};
 
 #[derive(Clone, Debug)]
 pub struct MultilinearKzg<M: MultiMillerLoop>(PhantomData<M>);
@@ -217,13 +223,11 @@ where
         Ok(Self::Param { g1, eqs, g2, ss })
     }
 
-    fn setup_custom(filename: &str) -> Result<Self::Param, Error>
+    fn setup_custom<R: Read>(reader: &mut R) -> Result<Self::Param, Error>
     where
         M::G1Affine: SerdeObject,
         M::G2Affine: SerdeObject,
     {
-        let reader = &mut std::fs::File::open(filename).unwrap();
-
         let mut k = [0u8; 4];
         let _ = reader.read_exact(&mut k[..]);
 

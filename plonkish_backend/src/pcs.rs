@@ -8,7 +8,10 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    io::Read,
+};
 
 pub mod multilinear;
 pub mod univariate;
@@ -34,7 +37,7 @@ pub trait PolynomialCommitmentScheme<F: Field>: Clone + Debug {
 
     fn setup(poly_size: usize, batch_size: usize, rng: impl RngCore) -> Result<Self::Param, Error>;
 
-    fn setup_custom(_filename: &str) -> Result<Self::Param, Error>;
+    fn setup_custom<R: Read>(_reader: &mut R) -> Result<Self::Param, Error>;
 
     fn trim(
         param: &Self::Param,
@@ -178,7 +181,13 @@ mod test {
         },
     };
     use rand::{rngs::OsRng, Rng};
-    use std::{fs::remove_file, iter, panic, process::Command, sync::Once};
+    use std::{
+        fs::{remove_file, File},
+        io::BufReader,
+        iter, panic,
+        process::Command,
+        sync::Once,
+    };
 
     fn gen_param<F, Pcs, T>(k: usize, batch_size: usize) -> Pcs::Param
     where
@@ -225,7 +234,9 @@ mod test {
         let filename = format!("{}{}", name, degree);
 
         let result = panic::catch_unwind(|| {
-            let params_from_file = Pcs::setup_custom(&filename).unwrap();
+            let file = File::open(filename.clone()).unwrap();
+            let mut reader = BufReader::new(file);
+            let params_from_file = Pcs::setup_custom(&mut reader).unwrap();
             let params_from_rng = gen_param::<_, Pcs, T>(degree, 1);
             (params_from_file, params_from_rng)
         });

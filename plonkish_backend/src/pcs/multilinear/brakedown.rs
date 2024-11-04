@@ -19,7 +19,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{borrow::Cow, marker::PhantomData, mem::size_of, slice};
+use std::{borrow::Cow, io::Read, marker::PhantomData, mem::size_of, slice};
 
 #[derive(Debug)]
 pub struct MultilinearBrakedown<F: PrimeField, H: Hash, S: BrakedownSpec>(PhantomData<(F, H, S)>);
@@ -110,7 +110,7 @@ where
         })
     }
 
-    fn setup_custom(_filename: &str) -> Result<Self::Param, Error> {
+    fn setup_custom<R: Read>(_reader: &mut R) -> Result<Self::Param, Error> {
         unimplemented!("MultilinearBrakedown does not support custom setup")
     }
 

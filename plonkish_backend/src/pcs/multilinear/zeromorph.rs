@@ -21,7 +21,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, io::Read};
 
 #[derive(Clone, Debug)]
 pub struct Zeromorph<Pcs>(PhantomData<Pcs>);
@@ -87,7 +87,7 @@ where
         UnivariateKzg::<M>::setup(poly_size, batch_size, rng)
     }
 
-    fn setup_custom(_filename: &str) -> Result<Self::Param, Error> {
+    fn setup_custom<R: Read>(_reader: &mut R) -> Result<Self::Param, Error> {
         unimplemented!("Zeromorph does not support custom setup")
     }
 

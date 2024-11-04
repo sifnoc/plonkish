@@ -24,7 +24,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{borrow::Cow, iter, marker::PhantomData};
+use std::{borrow::Cow, io::Read, iter, marker::PhantomData};
 
 #[derive(Clone, Debug)]
 pub struct UnivariateHyrax<C: CurveAffine>(PhantomData<C>);
@@ -170,7 +170,7 @@ where
         })
     }
 
-    fn setup_custom(_filename: &str) -> Result<Self::Param, Error> {
+    fn setup_custom<R: Read>(_reader: &mut R) -> Result<Self::Param, Error> {
         unimplemented!("UnivariateHyrax does not support custom setup")
     }
 

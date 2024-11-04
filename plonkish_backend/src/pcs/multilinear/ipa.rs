@@ -16,7 +16,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{marker::PhantomData, slice};
+use std::{marker::PhantomData, slice, io::Read};
 
 #[derive(Clone, Debug)]
 pub struct MultilinearIpa<C: CurveAffine>(PhantomData<C>);
@@ -115,7 +115,7 @@ where
         Ok(Self::Param { num_vars, g, h })
     }
 
-    fn setup_custom(_filename: &str) -> Result<Self::Param, Error> {
+    fn setup_custom<R: Read>(_reader: &mut R) -> Result<Self::Param, Error> {
         unimplemented!("MultilinearIpa does not support custom setup")
     }
 
