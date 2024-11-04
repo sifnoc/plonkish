@@ -10,7 +10,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{collections::BTreeSet, io::Read, fmt::Debug};
+use std::{collections::BTreeSet, fmt::Debug, io::Read};
 
 pub mod hyperplonk;
 pub mod unihyperplonk;

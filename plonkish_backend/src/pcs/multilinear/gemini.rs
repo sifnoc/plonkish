@@ -21,7 +21,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{marker::PhantomData, io::Read, ops::Neg};
+use std::{io::Read, marker::PhantomData, ops::Neg};
 
 #[derive(Clone, Debug)]
 pub struct Gemini<Pcs>(PhantomData<Pcs>);

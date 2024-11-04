@@ -16,7 +16,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{marker::PhantomData, slice, io::Read};
+use std::{io::Read, marker::PhantomData, slice};
 
 #[derive(Clone, Debug)]
 pub struct MultilinearIpa<C: CurveAffine>(PhantomData<C>);

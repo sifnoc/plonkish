@@ -21,7 +21,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{marker::PhantomData, io::Read};
+use std::{io::Read, marker::PhantomData};
 
 #[derive(Clone, Debug)]
 pub struct Zeromorph<Pcs>(PhantomData<Pcs>);

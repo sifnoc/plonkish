@@ -17,12 +17,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{
-    borrow::Cow,
-    io::Read,
-    iter,
-    marker::PhantomData,
-};
+use std::{borrow::Cow, io::Read, iter, marker::PhantomData};
 
 #[derive(Clone, Debug)]
 pub struct MultilinearHyrax<C: CurveAffine>(PhantomData<C>);

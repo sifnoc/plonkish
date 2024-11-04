@@ -18,13 +18,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{
-    io::Read,
-    iter,
-    marker::PhantomData,
-    ops::Neg,
-    slice,
-};
+use std::{io::Read, iter, marker::PhantomData, ops::Neg, slice};
 
 #[derive(Clone, Debug)]
 pub struct MultilinearKzg<M: MultiMillerLoop>(PhantomData<M>);

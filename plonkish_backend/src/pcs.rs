@@ -8,10 +8,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{
-    fmt::Debug,
-    io::Read,
-};
+use std::{fmt::Debug, io::Read};
 
 pub mod multilinear;
 pub mod univariate;

@@ -17,12 +17,7 @@ use crate::{
 };
 use halo2_curves::serde::SerdeObject;
 use rand::RngCore;
-use std::{
-    io::Read,
-    marker::PhantomData,
-    ops::Neg,
-    slice,
-};
+use std::{io::Read, marker::PhantomData, ops::Neg, slice};
 
 #[derive(Clone, Debug)]
 pub struct UnivariateKzg<M: MultiMillerLoop>(PhantomData<M>);

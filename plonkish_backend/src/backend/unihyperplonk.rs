@@ -25,9 +25,7 @@ use crate::{
     Error,
 };
 use rand::RngCore;
-use std::{
-    borrow::Cow, fmt::Debug, hash::Hash, io::Read, iter, marker::PhantomData, ops::Deref,
-};
+use std::{borrow::Cow, fmt::Debug, hash::Hash, io::Read, iter, marker::PhantomData, ops::Deref};
 
 pub(crate) mod preprocessor;
 pub(crate) mod prover;
